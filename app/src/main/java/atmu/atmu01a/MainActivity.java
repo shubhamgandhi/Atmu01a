@@ -24,11 +24,8 @@ import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -83,14 +80,14 @@ public class MainActivity extends Activity {
         }
 
         //declare button click listeners
-        Button pre1 = (Button) findViewById(R.id.btnPreset1);
+        Button pre1 = (Button) findViewById(R.id.colorPicker);
         Button pre2 = (Button) findViewById(R.id.btnPreset2);
         Button pre3 = (Button) findViewById(R.id.btnPreset3);
         Button send = (Button) findViewById(R.id.btnSend);
 
         pre1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                setPreset1();
+                colorPicker();
             }
         });
 
@@ -223,52 +220,6 @@ public class MainActivity extends Activity {
 
     public void sendToAtmu() {
 
-        // declare all the imageviews
-        final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
-        final ImageView s1pixel2 = (ImageView) findViewById(R.id.s1pixel2);
-        final ImageView s1pixel3 = (ImageView) findViewById(R.id.s1pixel3);
-        final ImageView s1pixel4 = (ImageView) findViewById(R.id.s1pixel4);
-        final ImageView s1pixel5 = (ImageView) findViewById(R.id.s1pixel5);
-        final ImageView s1pixel6 = (ImageView) findViewById(R.id.s1pixel6);
-        final ImageView s1pixel7 = (ImageView) findViewById(R.id.s1pixel7);
-        final ImageView s1pixel8 = (ImageView) findViewById(R.id.s1pixel8);
-        final ImageView s1pixel9 = (ImageView) findViewById(R.id.s1pixel9);
-        final ImageView s1pixel10 = (ImageView) findViewById(R.id.s1pixel10);
-        final ImageView s1pixel11 = (ImageView) findViewById(R.id.s1pixel11);
-
-        final ImageView s2pixel1 = (ImageView) findViewById(R.id.s2pixel1);
-        final ImageView s2pixel2 = (ImageView) findViewById(R.id.s2pixel2);
-        final ImageView s2pixel3 = (ImageView) findViewById(R.id.s2pixel3);
-        final ImageView s2pixel4 = (ImageView) findViewById(R.id.s2pixel4);
-        final ImageView s2pixel5 = (ImageView) findViewById(R.id.s2pixel5);
-        final ImageView s2pixel6 = (ImageView) findViewById(R.id.s2pixel6);
-        final ImageView s2pixel7 = (ImageView) findViewById(R.id.s2pixel7);
-        final ImageView s2pixel8 = (ImageView) findViewById(R.id.s2pixel8);
-        final ImageView s2pixel9 = (ImageView) findViewById(R.id.s2pixel9);
-        final ImageView s2pixel10 = (ImageView) findViewById(R.id.s2pixel10);
-        final ImageView s2pixel11 = (ImageView) findViewById(R.id.s2pixel11);
-
-        final ImageView s3pixel1 = (ImageView) findViewById(R.id.s3pixel1);
-        final ImageView s3pixel2 = (ImageView) findViewById(R.id.s3pixel2);
-        final ImageView s3pixel3 = (ImageView) findViewById(R.id.s3pixel3);
-        final ImageView s3pixel4 = (ImageView) findViewById(R.id.s3pixel4);
-        final ImageView s3pixel5 = (ImageView) findViewById(R.id.s3pixel5);
-        final ImageView s3pixel6 = (ImageView) findViewById(R.id.s3pixel6);
-        final ImageView s3pixel7 = (ImageView) findViewById(R.id.s3pixel7);
-        final ImageView s3pixel8 = (ImageView) findViewById(R.id.s3pixel8);
-        final ImageView s3pixel9 = (ImageView) findViewById(R.id.s3pixel9);
-        final ImageView s3pixel10 = (ImageView) findViewById(R.id.s3pixel10);
-        final ImageView s3pixel11 = (ImageView) findViewById(R.id.s3pixel11);
-
-        final ImageView strip1[] = {s1pixel1, s1pixel2, s1pixel3, s1pixel4,
-                s1pixel5, s1pixel6, s1pixel7, s1pixel8, s1pixel9, s1pixel10, s1pixel11 };
-
-        final ImageView strip2[] = {s2pixel1, s2pixel2, s2pixel3, s2pixel4,
-                s2pixel5, s2pixel6, s2pixel7, s2pixel8, s2pixel9, s2pixel10, s2pixel11 };
-
-        final ImageView strip3[] = {s3pixel1, s3pixel2, s3pixel3, s3pixel4,
-                s3pixel5, s3pixel6, s3pixel7, s3pixel8, s3pixel9, s3pixel10, s3pixel11 };
-
         if(socket!=null) {
             try {
                 btOutputStream = socket.getOutputStream();
@@ -284,15 +235,6 @@ public class MainActivity extends Activity {
                         e.printStackTrace();
                     }
                 }
-
-//                for(int j = 0; j < 11; j++) {
-//                    btOutputStream.write(s1[j][0]);
-////                    try {
-////                        Thread.sleep(1);
-////                    } catch (InterruptedException e) {
-////                        e.printStackTrace();
-////                    }
-//                }
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -309,10 +251,10 @@ public class MainActivity extends Activity {
         clickedPixel = view.getId();
         rProgress = 0; gProgress = 0; bProgress = 0;
 
-        showDialog();
+        showPixelDialog();
     }
 
-    public void showDialog() {
+    public void showPixelDialog() {
 
         final AlertDialog.Builder popDialog = new AlertDialog.Builder(this);
         final LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -412,7 +354,32 @@ public class MainActivity extends Activity {
 
     }
 
-    public void setPreset1() {
+    public void colorPicker() {
+
+        final AlertDialog.Builder colorDialog = new AlertDialog.Builder(this);
+        final LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+        final View Viewlayout = inflater.inflate(R.layout.color_picker_popup, (ViewGroup) findViewById(R.id.color_picker_popup));
+
+        colorDialog.setTitle("Select a color");
+        colorDialog.setView(Viewlayout);
+
+        // Create popup and show
+        colorDialog.create();
+        colorDialog.show();
+
+        // declare color picker buttons
+        ImageView whiteButton = (ImageView) Viewlayout.findViewById(R.id.whiteButton);
+        ImageView redButton = (ImageView) Viewlayout.findViewById(R.id.redButton);
+        ImageView greenButton = (ImageView) Viewlayout.findViewById(R.id.greenButton);
+        ImageView blueButton = (ImageView) Viewlayout.findViewById(R.id.blueButton);
+        ImageView orangeButton = (ImageView) Viewlayout.findViewById(R.id.orangeButton);
+        ImageView yellowButton = (ImageView) Viewlayout.findViewById(R.id.yellowButton);
+        ImageView cyanButton = (ImageView) Viewlayout.findViewById(R.id.cyanButton);
+        ImageView pinkButton = (ImageView) Viewlayout.findViewById(R.id.pinkButton);
+        ImageView purpleButton = (ImageView) Viewlayout.findViewById(R.id.purpleButton);
+        ImageView maroonButon = (ImageView) Viewlayout.findViewById(R.id.maroonButton);
+        ImageView lavenderButton = (ImageView) Viewlayout.findViewById(R.id.lavenderButton);
+        ImageView blackButton = (ImageView) Viewlayout.findViewById(R.id.blackButton);
 
         // declare all the imageviews
         final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
@@ -460,23 +427,164 @@ public class MainActivity extends Activity {
         final ImageView strip3[] = {s3pixel1, s3pixel2, s3pixel3, s3pixel4,
                 s3pixel5, s3pixel6, s3pixel7, s3pixel8, s3pixel9, s3pixel10, s3pixel11};
 
-        for(int i = 0; i < 11; i++) {
-           strip1[i].setBackgroundColor(Color.rgb(255, 255, 255));
-           strip2[i].setBackgroundColor(Color.rgb(255, 255, 255));
-           strip3[i].setBackgroundColor(Color.rgb(255, 255, 255));
-            s1[i][0] = (char) (255);
-            s1[i][1] = (char) (255);
-            s1[i][2] = (char) (255);
 
-            s2[i][0] = (char) (255);
-            s2[i][1] = (char) (255);
-            s2[i][2] = (char) (255);
 
-            s3[i][0] = (char) (255);
-            s3[i][1] = (char) (255);
-            s3[i][2] = (char) (255);
-       }
+        whiteButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(255, 255, 255));
+                    s1[i][0] = (char) (255); s1[i][1] = (char) (255); s1[i][2] = (char) (255);
+                    strip2[i].setBackgroundColor(Color.rgb(255, 255, 255));
+                    s2[i][0] = (char) (255); s2[i][1] = (char) (255); s2[i][2] = (char) (255);
+                    strip3[i].setBackgroundColor(Color.rgb(255, 255, 255));
+                    s3[i][0] = (char) (255); s3[i][1] = (char) (255); s3[i][2] = (char) (255);
+                }
+            }
 
+        });
+
+        redButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for (int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(255, 0, 0));
+                    s1[i][0] = (char) (255); s1[i][1] = (char) (0); s1[i][2] = (char) (0);
+                    strip2[i].setBackgroundColor(Color.rgb(255, 0, 0));
+                    s2[i][0] = (char) (255); s2[i][1] = (char) (0); s2[i][2] = (char) (0);
+                    strip3[i].setBackgroundColor(Color.rgb(255, 0, 0));
+                    s3[i][0] = (char) (255); s3[i][1] = (char) (0); s3[i][2] = (char) (0);
+                }
+            }
+        });
+
+        greenButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0, 255, 0));
+                    s1[i][0] = (char) (0); s1[i][1] = (char) (255); s1[i][2] = (char) (0);
+                    strip2[i].setBackgroundColor(Color.rgb(0, 255, 0));
+                    s2[i][0] = (char) (0); s2[i][1] = (char) (255); s2[i][2] = (char) (0);
+                    strip3[i].setBackgroundColor(Color.rgb(0, 255, 0));
+                    s3[i][0] = (char) (0); s3[i][1] = (char) (255); s3[i][2] = (char) (0);
+                }
+            }
+        });
+
+        blueButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0, 0, 255));
+                    s1[i][0] = (char) (0); s1[i][1] = (char) (0); s1[i][2] = (char) (255);
+                    strip2[i].setBackgroundColor(Color.rgb(0, 0, 255));
+                    s2[i][0] = (char) (0); s2[i][1] = (char) (0); s2[i][2] = (char) (255);
+                    strip3[i].setBackgroundColor(Color.rgb(0, 0, 255));
+                    s3[i][0] = (char) (0); s3[i][1] = (char) (0); s3[i][2] = (char) (255);
+                }
+            }
+        });
+
+        orangeButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(255, 0xa5, 0));
+                    s1[i][0] = (char) (255); s1[i][1] = (char) (0xa5); s1[i][2] = (char) (0);
+                    strip2[i].setBackgroundColor(Color.rgb(255, 0xa5, 0));
+                    s2[i][0] = (char) (255); s2[i][1] = (char) (0xa5); s2[i][2] = (char) (0);
+                    strip3[i].setBackgroundColor(Color.rgb(255, 0xa5, 0));
+                    s3[i][0] = (char) (255); s3[i][1] = (char) (0xa5); s3[i][2] = (char) (0);
+                }
+            }
+        });
+
+        yellowButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(255, 255, 0));
+                    s1[i][0] = (char) (255); s1[i][1] = (char) (255); s1[i][2] = (char) (0);
+                    strip2[i].setBackgroundColor(Color.rgb(255, 255, 0));
+                    s2[i][0] = (char) (255); s2[i][1] = (char) (255); s2[i][2] = (char) (0);
+                    strip3[i].setBackgroundColor(Color.rgb(255, 255, 0));
+                    s3[i][0] = (char) (255); s3[i][1] = (char) (255); s3[i][2] = (char) (0);
+                }
+            }
+        });
+
+        cyanButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0, 255, 255));
+                    s1[i][0] = (char) (0); s1[i][1] = (char) (255); s1[i][2] = (char) (255);
+                    strip2[i].setBackgroundColor(Color.rgb(0, 255, 255));
+                    s2[i][0] = (char) (0); s2[i][1] = (char) (255); s2[i][2] = (char) (255);
+                    strip3[i].setBackgroundColor(Color.rgb(0, 255, 255));
+                    s3[i][0] = (char) (0); s3[i][1] = (char) (255); s3[i][2] = (char) (255);
+                }
+            }
+        });
+
+        pinkButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0xff, 0xc0, 0xcb));
+                    s1[i][0] = (char) (0xff); s1[i][1] = (char) (0xc0); s1[i][2] = (char) (0xcb);
+                    strip2[i].setBackgroundColor(Color.rgb(0xff, 0xc0, 0xcb));
+                    s2[i][0] = (char) (0xff); s2[i][1] = (char) (0xc0); s2[i][2] = (char) (0xcb);
+                    strip3[i].setBackgroundColor(Color.rgb(0xff, 0xc0, 0xcb));
+                    s3[i][0] = (char) (0xff); s3[i][1] = (char) (0xc0); s3[i][2] = (char) (0xcb);
+                }
+            }
+        });
+
+        purpleButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0xa0, 0x20, 0xf0));
+                    s1[i][0] = (char) (0xa0); s1[i][1] = (char) (0x20); s1[i][2] = (char) (0xf0);
+                    strip2[i].setBackgroundColor(Color.rgb(0xa0, 0x20, 0xf0));
+                    s2[i][0] = (char) (0xa0); s2[i][1] = (char) (0x20); s2[i][2] = (char) (0xf0);
+                    strip3[i].setBackgroundColor(Color.rgb(0xa0, 0x20, 0xf0));
+                    s3[i][0] = (char) (0xa0); s3[i][1] = (char) (0x20); s3[i][2] = (char) (0xf0);
+                }
+            }
+        });
+
+        maroonButon.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0x80, 0, 0));
+                    s1[i][0] = (char) (0x80); s1[i][1] = (char) (0); s1[i][2] = (char) (0);
+                    strip2[i].setBackgroundColor(Color.rgb(0x80, 0, 0));
+                    s2[i][0] = (char) (0x80); s2[i][1] = (char) (0); s2[i][2] = (char) (0);
+                    strip3[i].setBackgroundColor(Color.rgb(0x80, 0, 0));
+                    s3[i][0] = (char) (0x80); s3[i][1] = (char) (0); s3[i][2] = (char) (0);
+                }
+            }
+        });
+
+        lavenderButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0xe6, 0xe6, 0xfa));
+                    s1[i][0] = (char) (0xe6); s1[i][1] = (char) (0xe6); s1[i][2] = (char) (0xfa);
+                    strip2[i].setBackgroundColor(Color.rgb(0xe6, 0xe6, 0xfa));
+                    s2[i][0] = (char) (0xe6); s2[i][1] = (char) (0xe6); s2[i][2] = (char) (0xfa);
+                    strip3[i].setBackgroundColor(Color.rgb(0xe6, 0xe6, 0xfa));
+                    s3[i][0] = (char) (0xe6); s3[i][1] = (char) (0xe6); s3[i][2] = (char) (0xfa);
+                }
+            }
+        });
+
+        blackButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                for(int i = 0; i < 11; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(0, 0, 0));
+                    s1[i][0] = (char) (0); s1[i][1] = (char) (0); s1[i][2] = (char) (0);
+                    strip2[i].setBackgroundColor(Color.rgb(0, 0, 0));
+                    s2[i][0] = (char) (0); s2[i][1] = (char) (0); s2[i][2] = (char) (0);
+                    strip3[i].setBackgroundColor(Color.rgb(0, 0, 0));
+                    s3[i][0] = (char) (0); s3[i][1] = (char) (0); s3[i][2] = (char) (0);
+                }
+            }
+        });
     }
 
     public void setPreset2() {
