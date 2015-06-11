@@ -25,6 +25,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
@@ -50,6 +51,8 @@ public class MainActivity extends Activity {
 
     BluetoothSocket socket;
     OutputStream btOutputStream;
+    InputStream btInputStream;
+    byte[] buffer = new byte[1];    // bluetooth input read buffer
 
     // Well known SPP UUID
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -223,17 +226,21 @@ public class MainActivity extends Activity {
         if(socket!=null) {
             try {
                 btOutputStream = socket.getOutputStream();
+                btInputStream = socket.getInputStream();
+
                 char test = 1;
 
                 for(int i = 0; i < 11; i++) {
                     btOutputStream.write(s1[i][0]);
                     btOutputStream.write(s1[i][1]);
                     btOutputStream.write(s1[i][2]);
-                    try {
-                        Thread.sleep(5);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+
+//                    // delay for 1 ms while stuff happens
+//                    try {
+//                        Thread.sleep(1);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
                 }
             }
             catch (IOException e) {
