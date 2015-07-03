@@ -9,7 +9,7 @@
 
     <item
         android:id="@+id/connect"
-        android:title="Connect"
+        android:title="@string/action_connect"
         android:orderInCategory="100"
         android:showAsAction="always" />
 
