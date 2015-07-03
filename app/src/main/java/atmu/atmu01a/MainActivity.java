@@ -9,7 +9,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,14 +21,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
@@ -33,26 +37,27 @@ import java.util.UUID;
 public class MainActivity extends Activity {
 
     private static final int REQUEST_ENABLE_BT = 1;
+    static final int STRIP_SIZE = 11;
+    static final int TUBE_QTY = 3;
+    static final int LEDS_PER_PIXEL = 3;
+
+    int pixelSelect;
     int rProgress = 0;
     int gProgress = 0;
     int bProgress = 0;
 
-    int clickedPixel;
-
-    // arrays that hold rgb data of strips
-    final char[][] s1 = new char[11][3];
-    final char[][] s2 = new char[11][3];
-    final char[][] s3 = new char[11][3];
+    // array that holds LED values to be pushed to Atmu
+    final char[][] s1 = new char[STRIP_SIZE][LEDS_PER_PIXEL];
+    final char[][] s2 = new char[STRIP_SIZE][LEDS_PER_PIXEL];
+    final char[][] s3 = new char[STRIP_SIZE][LEDS_PER_PIXEL];
+    final char[][][] strips = new char[TUBE_QTY][STRIP_SIZE][LEDS_PER_PIXEL];
 
     BluetoothAdapter myBluetoothAdapter;
-    Set<BluetoothDevice> pairedDevices;
-    ListView myListView;
     ArrayAdapter<String> BTArrayAdapter;
-
     BluetoothSocket socket;
     OutputStream btOutputStream;
-    InputStream btInputStream;
-    byte[] buffer = new byte[1];    // bluetooth input read buffer
+    Set<BluetoothDevice> pairedDevices;
+    ListView listViewBTDevices;
 
     // Well known SPP UUID
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -60,15 +65,17 @@ public class MainActivity extends Activity {
     // Insert your server's MAC address
     private static String address = "00:00:00:00:00:00";
 
+    private PopupWindow presetWindow;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         // zero out array
-        for(int i = 0; i < 11; i++) {
-            for(int j = 0; j < 3; j++) {
+        for(int i = 0; i < STRIP_SIZE; i++) {
+            for(int j = 0; j < LEDS_PER_PIXEL; j++) {
                 s1[i][j] = 0; s2[i][j] = 0; s3[i][j] = 0;
             }
         }
@@ -79,18 +86,19 @@ public class MainActivity extends Activity {
             statusText.setText("Bluetooth not supported on this phone");
         }
         else {
-            statusText.setText("Waiting to connect");
+            statusText.setText("Disconnected");
         }
 
-        //declare button click listeners
-        Button pre1 = (Button) findViewById(R.id.colorPicker);
-        Button pre2 = (Button) findViewById(R.id.btnPreset2);
-        Button pre3 = (Button) findViewById(R.id.btnPreset3);
-        Button send = (Button) findViewById(R.id.btnSend);
+        //create buttons, link buttons to XML views
+        ImageButton btnPreset = (ImageButton) findViewById(R.id.btnSetPreset);
+        ImageButton pre2 = (ImageButton) findViewById(R.id.btnSetLEDs);
+        ImageButton pre3 = (ImageButton) findViewById(R.id.btnSetTube);
+        ImageButton send = (ImageButton) findViewById(R.id.btnSend);
 
-        pre1.setOnClickListener(new View.OnClickListener() {
+        //declare button click listeners
+        btnPreset.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                colorPicker();
+                showPresetList();
             }
         });
 
@@ -112,8 +120,12 @@ public class MainActivity extends Activity {
             }
         });
 
+        Drawable myIcon = getDrawable(R.drawable.pixel_test);
+        myIcon.mutate().setColorFilter(0xFF0000, PorterDuff.Mode.MULTIPLY);
+
     }
 
+    //Options Menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu items for use in the action bar
@@ -155,21 +167,21 @@ public class MainActivity extends Activity {
 
         final AlertDialog.Builder popDialog = new AlertDialog.Builder(this);
         final LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
-        final View Viewlayout = inflater.inflate(R.layout.bt_list, (ViewGroup) findViewById(R.id.bt_list));
+        final View viewLayout = inflater.inflate(R.layout.bt_list, (ViewGroup) findViewById(R.id.bt_list));
 
         popDialog.setTitle("Paired Bluetooth Devices");
-        popDialog.setView(Viewlayout);
+        popDialog.setView(viewLayout);
 
         // create the arrayAdapter that contains the BTDevices, and set it to a ListView
-        myListView = (ListView) Viewlayout.findViewById(R.id.BTList);
+        listViewBTDevices = (ListView) viewLayout.findViewById(R.id.BTList);
         BTArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-        myListView.setAdapter(BTArrayAdapter);
-        myListView.setClickable(true);
+        listViewBTDevices.setAdapter(BTArrayAdapter);
+        listViewBTDevices.setClickable(true);
 
         // get paired devices
         pairedDevices = myBluetoothAdapter.getBondedDevices();
 
-        myListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listViewBTDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,long arg3) {
@@ -188,20 +200,17 @@ public class MainActivity extends Activity {
                     socket = connect_device.createRfcommSocketToServiceRecord(MY_UUID);
                     socket.connect();
                     if(socket.isConnected()) {
-                        Toast.makeText(getApplicationContext(),"Connection successful",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(),"Connection Successful",Toast.LENGTH_SHORT).show();
                     }
                     else {
-                        Toast.makeText(getApplicationContext(), "Connection unsuccessful", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Connection Unsuccessful", Toast.LENGTH_SHORT).show();
                     }
-
                 }
                 catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-
             }
-
         });
         // put it's one to the adapter
         for(BluetoothDevice device : pairedDevices)
@@ -212,74 +221,108 @@ public class MainActivity extends Activity {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
                         }
-
                 });
 
         // Create popup and show
         popDialog.create();
         popDialog.show();
-
     }
 
+    //Send pixel array to Atmu
     public void sendToAtmu() {
-
         if(socket!=null) {
+            // ghetto Attempt at making array of array of array
             try {
                 btOutputStream = socket.getOutputStream();
-                btInputStream = socket.getInputStream();
-
-                char test = 1;
-
-                for(int i = 0; i < 11; i++) {
-                    btOutputStream.write(s1[i][0]);
-                    btOutputStream.write(s1[i][1]);
-                    btOutputStream.write(s1[i][2]);
-
-//                    // delay for 1 ms while stuff happens
-//                    try {
-//                        Thread.sleep(1);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
+                for (int cur_tube = 0; cur_tube < TUBE_QTY; cur_tube++) {
+                    for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+                        for (int cur_LED = 0; cur_LED < LEDS_PER_PIXEL; cur_LED++) {
+                            btOutputStream.write(strips[cur_tube][cur_pixel][cur_LED]);
+                        }
+                        try {
+                            Thread.sleep(5);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
             catch (IOException e) {
                 e.printStackTrace();
             }
-
+//         if that mess above doesn't work uncomment this
+//            try {
+//                btOutputStream = socket.getOutputStream();
+//
+//                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+//                    btOutputStream.write(s1[cur_pixel][0]);
+//                    btOutputStream.write(s1[cur_pixel][1]);
+//                    btOutputStream.write(s1[cur_pixel][2]);
+//                    try {
+//                        Thread.sleep(5);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//
+//                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+//                    btOutputStream.write(s2[cur_pixel][0]);
+//                    btOutputStream.write(s2[cur_pixel][1]);
+//                    btOutputStream.write(s2[cur_pixel][2]);
+//                    try {
+//                        Thread.sleep(5);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//
+//                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+//                    btOutputStream.write(s3[cur_pixel][0]);
+//                    btOutputStream.write(s3[cur_pixel][1]);
+//                    btOutputStream.write(s3[cur_pixel][2]);
+//                    try {
+//                        Thread.sleep(5);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//            catch (IOException e) {
+//                e.printStackTrace();
+//            }
         }
         else {
-            Toast.makeText(getApplicationContext(), "No bluetooth connection", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "No Bluetooth Connection", Toast.LENGTH_SHORT).show();
         }
-
     }
 
+    //When clicking pixel
     public void pixelClick(View view) {
-        clickedPixel = view.getId();
+        pixelSelect = view.getId();
         rProgress = 0; gProgress = 0; bProgress = 0;
 
-        showPixelDialog();
+        showDialog();
     }
 
-    public void showPixelDialog() {
+    public void showDialog() {
 
         final AlertDialog.Builder popDialog = new AlertDialog.Builder(this);
         final LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
-        final View Viewlayout = inflater.inflate(R.layout.popup, (ViewGroup) findViewById(R.id.popup));
+        final View viewLayout = inflater.inflate(R.layout.popup_led, (ViewGroup) findViewById(R.id.popupLED));
 
-        final TextView popupRText = (TextView) Viewlayout.findViewById(R.id.popupRText);
-        final TextView popupGText = (TextView) Viewlayout.findViewById(R.id.popupGText);
-        final TextView popupBText = (TextView) Viewlayout.findViewById(R.id.popupBText);
+        final TextView popupRText = (TextView) viewLayout.findViewById(R.id.popupRText);
+        final TextView popupGText = (TextView) viewLayout.findViewById(R.id.popupGText);
+        final TextView popupBText = (TextView) viewLayout.findViewById(R.id.popupBText);
 
-        final ImageView popupPixel = (ImageView) Viewlayout.findViewById(R.id.popupPixel);
-        final ImageView setPixel = (ImageView) findViewById(clickedPixel);
+        final ImageView popupPixel = (ImageView) viewLayout.findViewById(R.id.popupPixel);
+        final ImageView setPixel = (ImageView) findViewById(pixelSelect);
 
 
         popDialog.setTitle("Select RGB values ");
-        popDialog.setView(Viewlayout);
+        popDialog.setView(viewLayout);
 
         //  seekBarR
-        final SeekBar seekR = (SeekBar) Viewlayout.findViewById(R.id.seekBarR);
+        final SeekBar seekR = (SeekBar) viewLayout.findViewById(R.id.seekBarR);
         seekR.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 //Set progress text
@@ -301,7 +344,7 @@ public class MainActivity extends Activity {
         });
 
         //  seekBarG
-        final SeekBar seekG = (SeekBar) Viewlayout.findViewById(R.id.seekBarG);
+        final SeekBar seekG = (SeekBar) viewLayout.findViewById(R.id.seekBarG);
         seekG.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
                 //Do something here with new value
@@ -323,7 +366,7 @@ public class MainActivity extends Activity {
         });
 
         //  seekBarB
-        final SeekBar seekB = (SeekBar) Viewlayout.findViewById(R.id.seekBarB);
+        final SeekBar seekB = (SeekBar) viewLayout.findViewById(R.id.seekBarB);
         seekB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
                 //Do something here with new value
@@ -357,36 +400,50 @@ public class MainActivity extends Activity {
         // Create popup and show
         popDialog.create();
         popDialog.show();
+    }
 
+    public void showPresetList() {
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+        View layout = inflater.inflate(R.layout.popup_preset, (ViewGroup) findViewById(R.id.popupPreset));
+        presetWindow = new PopupWindow(layout, 500, 400, true);
+        presetWindow.showAtLocation(layout, Gravity.CENTER, 0, 0);
+
+        ImageButton btn_Preset1 = (ImageButton) layout.findViewById(R.id.btnPreset1);
+        ImageButton btn_Preset2 = (ImageButton) layout.findViewById(R.id.btnPreset2);
+        ImageButton btn_Preset3 = (ImageButton) layout.findViewById(R.id.btnPreset3);
+        ImageButton btn_PresetPopupExit = (ImageButton) layout.findViewById(R.id.btnExit);
+
+        btn_Preset1.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setPreset1();
+                presetWindow.dismiss();
+            }
+        });
+
+        btn_Preset2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setPreset2();
+                presetWindow.dismiss();
+            }
+        });
+
+        btn_Preset3.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setPreset3();
+                presetWindow.dismiss();
+            }
+        });
+
+        btn_PresetPopupExit.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                presetWindow.dismiss();
+            }
+
+        });
 
     }
 
-    public void colorPicker() {
-
-        final AlertDialog.Builder colorDialog = new AlertDialog.Builder(this);
-        final LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
-        final View Viewlayout = inflater.inflate(R.layout.color_picker_popup, (ViewGroup) findViewById(R.id.color_picker_popup));
-
-        colorDialog.setTitle("Select a color");
-        colorDialog.setView(Viewlayout);
-
-        // Create popup and show
-        colorDialog.create();
-        colorDialog.show();
-
-        // declare color picker buttons
-        ImageView whiteButton = (ImageView) Viewlayout.findViewById(R.id.whiteButton);
-        ImageView redButton = (ImageView) Viewlayout.findViewById(R.id.redButton);
-        ImageView greenButton = (ImageView) Viewlayout.findViewById(R.id.greenButton);
-        ImageView blueButton = (ImageView) Viewlayout.findViewById(R.id.blueButton);
-        ImageView orangeButton = (ImageView) Viewlayout.findViewById(R.id.orangeButton);
-        ImageView yellowButton = (ImageView) Viewlayout.findViewById(R.id.yellowButton);
-        ImageView cyanButton = (ImageView) Viewlayout.findViewById(R.id.cyanButton);
-        ImageView pinkButton = (ImageView) Viewlayout.findViewById(R.id.pinkButton);
-        ImageView purpleButton = (ImageView) Viewlayout.findViewById(R.id.purpleButton);
-        ImageView maroonButon = (ImageView) Viewlayout.findViewById(R.id.maroonButton);
-        ImageView lavenderButton = (ImageView) Viewlayout.findViewById(R.id.lavenderButton);
-        ImageView blackButton = (ImageView) Viewlayout.findViewById(R.id.blackButton);
+    public void setPreset1() {
 
         // declare all the imageviews
         final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
@@ -434,164 +491,23 @@ public class MainActivity extends Activity {
         final ImageView strip3[] = {s3pixel1, s3pixel2, s3pixel3, s3pixel4,
                 s3pixel5, s3pixel6, s3pixel7, s3pixel8, s3pixel9, s3pixel10, s3pixel11};
 
+        for(int i = 0; i < STRIP_SIZE; i++) {
+           strip1[i].setBackgroundColor(Color.rgb(255, 255, 255));
+           strip2[i].setBackgroundColor(Color.rgb(255, 255, 255));
+           strip3[i].setBackgroundColor(Color.rgb(255, 255, 255));
+            s1[i][0] = (char) (255);
+            s1[i][1] = (char) (255);
+            s1[i][2] = (char) (255);
 
+            s2[i][0] = (char) (255);
+            s2[i][1] = (char) (255);
+            s2[i][2] = (char) (255);
 
-        whiteButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(255, 255, 255));
-                    s1[i][0] = (char) (255); s1[i][1] = (char) (255); s1[i][2] = (char) (255);
-                    strip2[i].setBackgroundColor(Color.rgb(255, 255, 255));
-                    s2[i][0] = (char) (255); s2[i][1] = (char) (255); s2[i][2] = (char) (255);
-                    strip3[i].setBackgroundColor(Color.rgb(255, 255, 255));
-                    s3[i][0] = (char) (255); s3[i][1] = (char) (255); s3[i][2] = (char) (255);
-                }
-            }
+            s3[i][0] = (char) (255);
+            s3[i][1] = (char) (255);
+            s3[i][2] = (char) (255);
+       }
 
-        });
-
-        redButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for (int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(255, 0, 0));
-                    s1[i][0] = (char) (255); s1[i][1] = (char) (0); s1[i][2] = (char) (0);
-                    strip2[i].setBackgroundColor(Color.rgb(255, 0, 0));
-                    s2[i][0] = (char) (255); s2[i][1] = (char) (0); s2[i][2] = (char) (0);
-                    strip3[i].setBackgroundColor(Color.rgb(255, 0, 0));
-                    s3[i][0] = (char) (255); s3[i][1] = (char) (0); s3[i][2] = (char) (0);
-                }
-            }
-        });
-
-        greenButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0, 255, 0));
-                    s1[i][0] = (char) (0); s1[i][1] = (char) (255); s1[i][2] = (char) (0);
-                    strip2[i].setBackgroundColor(Color.rgb(0, 255, 0));
-                    s2[i][0] = (char) (0); s2[i][1] = (char) (255); s2[i][2] = (char) (0);
-                    strip3[i].setBackgroundColor(Color.rgb(0, 255, 0));
-                    s3[i][0] = (char) (0); s3[i][1] = (char) (255); s3[i][2] = (char) (0);
-                }
-            }
-        });
-
-        blueButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0, 0, 255));
-                    s1[i][0] = (char) (0); s1[i][1] = (char) (0); s1[i][2] = (char) (255);
-                    strip2[i].setBackgroundColor(Color.rgb(0, 0, 255));
-                    s2[i][0] = (char) (0); s2[i][1] = (char) (0); s2[i][2] = (char) (255);
-                    strip3[i].setBackgroundColor(Color.rgb(0, 0, 255));
-                    s3[i][0] = (char) (0); s3[i][1] = (char) (0); s3[i][2] = (char) (255);
-                }
-            }
-        });
-
-        orangeButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(255, 0xa5, 0));
-                    s1[i][0] = (char) (255); s1[i][1] = (char) (0xa5); s1[i][2] = (char) (0);
-                    strip2[i].setBackgroundColor(Color.rgb(255, 0xa5, 0));
-                    s2[i][0] = (char) (255); s2[i][1] = (char) (0xa5); s2[i][2] = (char) (0);
-                    strip3[i].setBackgroundColor(Color.rgb(255, 0xa5, 0));
-                    s3[i][0] = (char) (255); s3[i][1] = (char) (0xa5); s3[i][2] = (char) (0);
-                }
-            }
-        });
-
-        yellowButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(255, 255, 0));
-                    s1[i][0] = (char) (255); s1[i][1] = (char) (255); s1[i][2] = (char) (0);
-                    strip2[i].setBackgroundColor(Color.rgb(255, 255, 0));
-                    s2[i][0] = (char) (255); s2[i][1] = (char) (255); s2[i][2] = (char) (0);
-                    strip3[i].setBackgroundColor(Color.rgb(255, 255, 0));
-                    s3[i][0] = (char) (255); s3[i][1] = (char) (255); s3[i][2] = (char) (0);
-                }
-            }
-        });
-
-        cyanButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0, 255, 255));
-                    s1[i][0] = (char) (0); s1[i][1] = (char) (255); s1[i][2] = (char) (255);
-                    strip2[i].setBackgroundColor(Color.rgb(0, 255, 255));
-                    s2[i][0] = (char) (0); s2[i][1] = (char) (255); s2[i][2] = (char) (255);
-                    strip3[i].setBackgroundColor(Color.rgb(0, 255, 255));
-                    s3[i][0] = (char) (0); s3[i][1] = (char) (255); s3[i][2] = (char) (255);
-                }
-            }
-        });
-
-        pinkButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0xff, 0xc0, 0xcb));
-                    s1[i][0] = (char) (0xff); s1[i][1] = (char) (0xc0); s1[i][2] = (char) (0xcb);
-                    strip2[i].setBackgroundColor(Color.rgb(0xff, 0xc0, 0xcb));
-                    s2[i][0] = (char) (0xff); s2[i][1] = (char) (0xc0); s2[i][2] = (char) (0xcb);
-                    strip3[i].setBackgroundColor(Color.rgb(0xff, 0xc0, 0xcb));
-                    s3[i][0] = (char) (0xff); s3[i][1] = (char) (0xc0); s3[i][2] = (char) (0xcb);
-                }
-            }
-        });
-
-        purpleButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0xa0, 0x20, 0xf0));
-                    s1[i][0] = (char) (0xa0); s1[i][1] = (char) (0x20); s1[i][2] = (char) (0xf0);
-                    strip2[i].setBackgroundColor(Color.rgb(0xa0, 0x20, 0xf0));
-                    s2[i][0] = (char) (0xa0); s2[i][1] = (char) (0x20); s2[i][2] = (char) (0xf0);
-                    strip3[i].setBackgroundColor(Color.rgb(0xa0, 0x20, 0xf0));
-                    s3[i][0] = (char) (0xa0); s3[i][1] = (char) (0x20); s3[i][2] = (char) (0xf0);
-                }
-            }
-        });
-
-        maroonButon.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0x80, 0, 0));
-                    s1[i][0] = (char) (0x80); s1[i][1] = (char) (0); s1[i][2] = (char) (0);
-                    strip2[i].setBackgroundColor(Color.rgb(0x80, 0, 0));
-                    s2[i][0] = (char) (0x80); s2[i][1] = (char) (0); s2[i][2] = (char) (0);
-                    strip3[i].setBackgroundColor(Color.rgb(0x80, 0, 0));
-                    s3[i][0] = (char) (0x80); s3[i][1] = (char) (0); s3[i][2] = (char) (0);
-                }
-            }
-        });
-
-        lavenderButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0xe6, 0xe6, 0xfa));
-                    s1[i][0] = (char) (0xe6); s1[i][1] = (char) (0xe6); s1[i][2] = (char) (0xfa);
-                    strip2[i].setBackgroundColor(Color.rgb(0xe6, 0xe6, 0xfa));
-                    s2[i][0] = (char) (0xe6); s2[i][1] = (char) (0xe6); s2[i][2] = (char) (0xfa);
-                    strip3[i].setBackgroundColor(Color.rgb(0xe6, 0xe6, 0xfa));
-                    s3[i][0] = (char) (0xe6); s3[i][1] = (char) (0xe6); s3[i][2] = (char) (0xfa);
-                }
-            }
-        });
-
-        blackButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for(int i = 0; i < 11; i++) {
-                    strip1[i].setBackgroundColor(Color.rgb(0, 0, 0));
-                    s1[i][0] = (char) (0); s1[i][1] = (char) (0); s1[i][2] = (char) (0);
-                    strip2[i].setBackgroundColor(Color.rgb(0, 0, 0));
-                    s2[i][0] = (char) (0); s2[i][1] = (char) (0); s2[i][2] = (char) (0);
-                    strip3[i].setBackgroundColor(Color.rgb(0, 0, 0));
-                    s3[i][0] = (char) (0); s3[i][1] = (char) (0); s3[i][2] = (char) (0);
-                }
-            }
-        });
     }
 
     public void setPreset2() {
@@ -642,48 +558,69 @@ public class MainActivity extends Activity {
         final ImageView strip3[] = {s3pixel1, s3pixel2, s3pixel3, s3pixel4,
                 s3pixel5, s3pixel6, s3pixel7, s3pixel8, s3pixel9, s3pixel10, s3pixel11};
 
-        for(int i = 0; i < 6; i++) {
-            strip1[i].setBackgroundColor(Color.rgb(0, 255, 0));
-                s1[i][0] = (char) (0);
-                s1[i][1] = (char) (255);
-                s1[i][2] = (char) (0);
-            strip2[i].setBackgroundColor(Color.rgb(0, 255, 0));
-                s2[i][0] = (char) (0);
-                s2[i][1] = (char) (255);
-                s2[i][2] = (char) (0);
-            strip3[i].setBackgroundColor(Color.rgb(0, 255, 0));
-                s3[i][0] = (char) (0);
-                s3[i][1] = (char) (255);
-                s3[i][2] = (char) (0);
+        for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+            strip1[cur_pixel].setBackgroundColor(Color.rgb(255, 0, 0));
+            strips[0][cur_pixel][0] = (char) (255);
+            strips[0][cur_pixel][1] = (char) (0);
+            strips[0][cur_pixel][2] = (char) (0);
         }
-        for(int i = 6; i < 9; i++) {
-            strip1[i].setBackgroundColor(Color.rgb(255, 255, 0));
-                s1[i][0] = (char) (255);
-                s1[i][1] = (char) (255);
-                s1[i][2] = (char) (0);
-            strip2[i].setBackgroundColor(Color.rgb(255, 255, 0));
-                s2[i][0] = (char) (255);
-                s2[i][1] = (char) (255);
-                s2[i][2] = (char) (0);
-            strip3[i].setBackgroundColor(Color.rgb(255, 255, 0));
-                s3[i][0] = (char) (255);
-                s3[i][1] = (char) (255);
-                s3[i][2] = (char) (0);
+
+        for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+            strip2[cur_pixel].setBackgroundColor(Color.rgb(0, 255, 0));
+            strips[1][cur_pixel][0] = (char) (0);
+            strips[1][cur_pixel][1] = (char) (255);
+            strips[1][cur_pixel][2] = (char) (0);
         }
-        for(int i = 9; i < 11; i++) {
-            strip1[i].setBackgroundColor(Color.rgb(255, 0, 0));
-                s1[i][0] = (char) (255);
-                s1[i][1] = (char) (0);
-                s1[i][2] = (char) (0);
-            strip2[i].setBackgroundColor(Color.rgb(255, 0, 0));
-                s2[i][0] = (char) (255);
-                s2[i][1] = (char) (0);
-                s2[i][2] = (char) (0);
-            strip3[i].setBackgroundColor(Color.rgb(255, 0, 0));
-                s3[i][0] = (char) (255);
-                s3[i][1] = (char) (0);
-                s3[i][2] = (char) (0);
+
+        for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+            strip3[cur_pixel].setBackgroundColor(Color.rgb(0, 0, 255));
+            strips[2][cur_pixel][0] = (char) (0);
+            strips[2][cur_pixel][1] = (char) (0);
+            strips[2][cur_pixel][2] = (char) (255);
         }
+
+//        for(int i = 0; i < 6; i++) {
+//            strip1[i].setBackgroundColor(Color.rgb(0, 255, 0));
+//                s1[i][0] = (char) (0);
+//                s1[i][1] = (char) (255);
+//                s1[i][2] = (char) (0);
+//            strip2[i].setBackgroundColor(Color.rgb(0, 255, 0));
+//                s2[i][0] = (char) (0);
+//                s2[i][1] = (char) (255);
+//                s2[i][2] = (char) (0);
+//            strip3[i].setBackgroundColor(Color.rgb(0, 255, 0));
+//                s3[i][0] = (char) (0);
+//                s3[i][1] = (char) (255);
+//                s3[i][2] = (char) (0);
+//        }
+//        for(int i = 6; i < 9; i++) {
+//            strip1[i].setBackgroundColor(Color.rgb(255, 255, 0));
+//                s1[i][0] = (char) (255);
+//                s1[i][1] = (char) (255);
+//                s1[i][2] = (char) (0);
+//            strip2[i].setBackgroundColor(Color.rgb(255, 255, 0));
+//                s2[i][0] = (char) (255);
+//                s2[i][1] = (char) (255);
+//                s2[i][2] = (char) (0);
+//            strip3[i].setBackgroundColor(Color.rgb(255, 255, 0));
+//                s3[i][0] = (char) (255);
+//                s3[i][1] = (char) (255);
+//                s3[i][2] = (char) (0);
+//        }
+//        for(int i = 9; i < STRIP_SIZE; i++) {
+//            strip1[i].setBackgroundColor(Color.rgb(255, 0, 0));
+//                s1[i][0] = (char) (255);
+//                s1[i][1] = (char) (0);
+//                s1[i][2] = (char) (0);
+//            strip2[i].setBackgroundColor(Color.rgb(255, 0, 0));
+//                s2[i][0] = (char) (255);
+//                s2[i][1] = (char) (0);
+//                s2[i][2] = (char) (0);
+//            strip3[i].setBackgroundColor(Color.rgb(255, 0, 0));
+//                s3[i][0] = (char) (255);
+//                s3[i][1] = (char) (0);
+//                s3[i][2] = (char) (0);
+//        }
 
     }
 
@@ -734,7 +671,7 @@ public class MainActivity extends Activity {
         final ImageView strip3[] = {s3pixel1, s3pixel2, s3pixel3, s3pixel4,
                 s3pixel5, s3pixel6, s3pixel7, s3pixel8, s3pixel9, s3pixel10, s3pixel11 };
 
-        for(int i = 0; i < 11; i++) {
+        for(int i = 0; i < STRIP_SIZE; i++) {
             // Set background color of pixels and update array that holds RGB values
             strip1[i].setBackgroundColor(Color.rgb(23 * i, 23 * i, 255 - i));
                 s1[i][0] = (char) (23*i);
@@ -750,5 +687,4 @@ public class MainActivity extends Activity {
                 s3[i][2] = (char) (255-i);
         }
     }
-
 }

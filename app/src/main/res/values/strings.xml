@@ -1,6 +1,13 @@
 <resources>
-    <string name="app_name">Atmu</string>
+    <string name="app_name">atmu</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="text_status_label">"Status: "</string>
     <string name="action_settings">Settings</string>
+    <string name="action_connect">Connect</string>
+    <string name="strip_padding">10dp</string>
+    <string name="strip_right_margin">30dp</string>
+
+    <string name="title_activity_popup_preset">popup_preset</string>
+    <color name="floating_grey">#ff424242</color>
+
 </resources>
