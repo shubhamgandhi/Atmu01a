@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -42,6 +43,7 @@ public class MainActivity extends Activity {
     static final int LEDS_PER_PIXEL = 3;
 
     int pixelSelect;
+    int tubeSelect;
     int rProgress = 0;
     int gProgress = 0;
     int bProgress = 0;
@@ -92,7 +94,7 @@ public class MainActivity extends Activity {
         //create buttons, link buttons to XML views
         ImageButton btnPreset = (ImageButton) findViewById(R.id.btnSetPreset);
         ImageButton pre2 = (ImageButton) findViewById(R.id.btnSetLEDs);
-        ImageButton pre3 = (ImageButton) findViewById(R.id.btnSetTube);
+        ImageButton btnSetTube = (ImageButton) findViewById(R.id.btnSetTube);
         ImageButton send = (ImageButton) findViewById(R.id.btnSend);
 
         //declare button click listeners
@@ -108,9 +110,9 @@ public class MainActivity extends Activity {
             }
         });
 
-        pre3.setOnClickListener(new View.OnClickListener() {
+        btnSetTube.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                setPreset3();
+                showTubeList();
             }
         });
 
@@ -301,10 +303,10 @@ public class MainActivity extends Activity {
         pixelSelect = view.getId();
         rProgress = 0; gProgress = 0; bProgress = 0;
 
-        showDialog();
+        showPixelDetail();
     }
 
-    public void showDialog() {
+    public void showPixelDetail() {
 
         final AlertDialog.Builder popDialog = new AlertDialog.Builder(this);
         final LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -441,6 +443,200 @@ public class MainActivity extends Activity {
 
         });
 
+    }
+
+    public void showTubeList() {
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+        View layout = inflater.inflate(R.layout.popup_tube, (ViewGroup) findViewById(R.id.popupTube));
+        presetWindow = new PopupWindow(layout, 800, 600, true);
+        presetWindow.showAtLocation(layout, Gravity.CENTER, 0, 0);
+
+        final ImageView tubeView = (ImageView) layout.findViewById(R.id.tubeView);
+
+        Button btn_setTube1 = (Button) layout.findViewById(R.id.setTube1);
+        Button btn_setTube2 = (Button) layout.findViewById(R.id.setTube2);
+        Button btn_setTube3 = (Button) layout.findViewById(R.id.setTube3);
+        Button btn_setTube4 = (Button) layout.findViewById(R.id.setTube4);
+        Button btn_setTube5 = (Button) layout.findViewById(R.id.setTube5);
+
+        final TextView textRValue = (TextView) layout.findViewById(R.id.textRValue);
+        final TextView textGValue = (TextView) layout.findViewById(R.id.textGValue);
+        final TextView textBValue = (TextView) layout.findViewById(R.id.textBValue);
+
+        final SeekBar seekR = (SeekBar) layout.findViewById(R.id.seekBarR);
+        final SeekBar seekG = (SeekBar) layout.findViewById(R.id.seekBarG);
+        final SeekBar seekB = (SeekBar) layout.findViewById(R.id.seekBarB);
+
+        seekR.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+                //Do something here with new value
+                textRValue.setText("R: " + progress);
+                rProgress = progress;
+
+                tubeView.setBackgroundColor(Color.rgb(rProgress, gProgress, bProgress));
+            }
+
+            public void onStartTrackingTouch(SeekBar arg0) {
+                // TODO Auto-generated method stub
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+        });
+
+        seekG.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+                //Do something here with new value
+                textGValue.setText("G: " + progress);
+                gProgress = progress;
+
+                tubeView.setBackgroundColor(Color.rgb(rProgress, gProgress, bProgress));
+            }
+
+            public void onStartTrackingTouch(SeekBar arg0) {
+                // TODO Auto-generated method stub
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+        });
+
+        seekB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+                //Do something here with new value
+                textBValue.setText("B: " + progress);
+                bProgress = progress;
+
+                tubeView.setBackgroundColor(Color.rgb(rProgress, gProgress, bProgress));
+            }
+
+            public void onStartTrackingTouch(SeekBar arg0) {
+                // TODO Auto-generated method stub
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+        });
+
+        btn_setTube1.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setTube(1, rProgress, gProgress, bProgress);
+                presetWindow.dismiss();
+            }
+        });
+
+        btn_setTube2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setTube(2, rProgress, gProgress, bProgress);
+                presetWindow.dismiss();
+            }
+        });
+
+        btn_setTube3.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setTube(3, rProgress, gProgress, bProgress);
+                presetWindow.dismiss();
+            }
+        });
+
+        btn_setTube4.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setTube(4, rProgress, gProgress, bProgress);
+                presetWindow.dismiss();
+            }
+        });
+
+        btn_setTube5.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setTube(5, rProgress, gProgress, bProgress);
+                presetWindow.dismiss();
+            }
+        });
+    }
+
+    public void setTube(int tube, int rValue, int gValue, int bValue) {
+        tubeSelect = tube;
+        switch(tubeSelect){
+            case 1:
+                final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
+                final ImageView s1pixel2 = (ImageView) findViewById(R.id.s1pixel2);
+                final ImageView s1pixel3 = (ImageView) findViewById(R.id.s1pixel3);
+                final ImageView s1pixel4 = (ImageView) findViewById(R.id.s1pixel4);
+                final ImageView s1pixel5 = (ImageView) findViewById(R.id.s1pixel5);
+                final ImageView s1pixel6 = (ImageView) findViewById(R.id.s1pixel6);
+                final ImageView s1pixel7 = (ImageView) findViewById(R.id.s1pixel7);
+                final ImageView s1pixel8 = (ImageView) findViewById(R.id.s1pixel8);
+                final ImageView s1pixel9 = (ImageView) findViewById(R.id.s1pixel9);
+                final ImageView s1pixel10 = (ImageView) findViewById(R.id.s1pixel10);
+                final ImageView s1pixel11 = (ImageView) findViewById(R.id.s1pixel11);
+
+                final ImageView strip1[] = {s1pixel1, s1pixel2, s1pixel3, s1pixel4,
+                        s1pixel5, s1pixel6, s1pixel7, s1pixel8, s1pixel9, s1pixel10, s1pixel11 };
+
+                for(int i = 0; i < STRIP_SIZE; i++) {
+                    strip1[i].setBackgroundColor(Color.rgb(rValue, gValue, bValue));
+                    s1[i][0] = (char) (rValue);
+                    s1[i][1] = (char) (gValue);
+                    s1[i][2] = (char) (bValue);
+                }
+
+                break;
+            case 2:
+                final ImageView s2pixel1 = (ImageView) findViewById(R.id.s2pixel1);
+                final ImageView s2pixel2 = (ImageView) findViewById(R.id.s2pixel2);
+                final ImageView s2pixel3 = (ImageView) findViewById(R.id.s2pixel3);
+                final ImageView s2pixel4 = (ImageView) findViewById(R.id.s2pixel4);
+                final ImageView s2pixel5 = (ImageView) findViewById(R.id.s2pixel5);
+                final ImageView s2pixel6 = (ImageView) findViewById(R.id.s2pixel6);
+                final ImageView s2pixel7 = (ImageView) findViewById(R.id.s2pixel7);
+                final ImageView s2pixel8 = (ImageView) findViewById(R.id.s2pixel8);
+                final ImageView s2pixel9 = (ImageView) findViewById(R.id.s2pixel9);
+                final ImageView s2pixel10 = (ImageView) findViewById(R.id.s2pixel10);
+                final ImageView s2pixel11 = (ImageView) findViewById(R.id.s2pixel11);
+
+                final ImageView strip2[] = {s2pixel1, s2pixel2, s2pixel3, s2pixel4,
+                        s2pixel5, s2pixel6, s2pixel7, s2pixel8, s2pixel9, s2pixel10, s2pixel11 };
+
+                for(int i = 0; i < STRIP_SIZE; i++) {
+                    strip2[i].setBackgroundColor(Color.rgb(rValue, gValue, bValue));
+                    s2[i][0] = (char) (rValue);
+                    s2[i][1] = (char) (gValue);
+                    s2[i][2] = (char) (bValue);
+                }
+
+                break;
+            case 3:
+                final ImageView s3pixel1 = (ImageView) findViewById(R.id.s3pixel1);
+                final ImageView s3pixel2 = (ImageView) findViewById(R.id.s3pixel2);
+                final ImageView s3pixel3 = (ImageView) findViewById(R.id.s3pixel3);
+                final ImageView s3pixel4 = (ImageView) findViewById(R.id.s3pixel4);
+                final ImageView s3pixel5 = (ImageView) findViewById(R.id.s3pixel5);
+                final ImageView s3pixel6 = (ImageView) findViewById(R.id.s3pixel6);
+                final ImageView s3pixel7 = (ImageView) findViewById(R.id.s3pixel7);
+                final ImageView s3pixel8 = (ImageView) findViewById(R.id.s3pixel8);
+                final ImageView s3pixel9 = (ImageView) findViewById(R.id.s3pixel9);
+                final ImageView s3pixel10 = (ImageView) findViewById(R.id.s3pixel10);
+                final ImageView s3pixel11 = (ImageView) findViewById(R.id.s3pixel11);
+
+                final ImageView strip3[] = {s3pixel1, s3pixel2, s3pixel3, s3pixel4,
+                    s3pixel5, s3pixel6, s3pixel7, s3pixel8, s3pixel9, s3pixel10, s3pixel11};
+
+                for(int i = 0; i < STRIP_SIZE; i++) {
+                    strip3[i].setBackgroundColor(Color.rgb(rValue, gValue, bValue));
+                    s3[i][0] = (char) (rValue);
+                    s3[i][1] = (char) (gValue);
+                    s3[i][2] = (char) (bValue);
+                }
+
+                break;
+            case 4:
+                break;
+            case 5:
+                break;
+        }
     }
 
     public void setPreset1() {
