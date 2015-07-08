@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
@@ -41,6 +42,42 @@ public class MainActivity extends Activity {
     static final int STRIP_SIZE = 11;
     static final int TUBE_QTY = 3;
     static final int LEDS_PER_PIXEL = 3;
+
+    ImageView s1pixel1;
+    ImageView s1pixel2;
+    ImageView s1pixel3;
+    ImageView s1pixel4;
+    ImageView s1pixel5;
+    ImageView s1pixel6;
+    ImageView s1pixel7;
+    ImageView s1pixel8;
+    ImageView s1pixel9;
+    ImageView s1pixel10;
+    ImageView s1pixel11;
+
+    ImageView s2pixel1;
+    ImageView s2pixel2;
+    ImageView s2pixel3;
+    ImageView s2pixel4;
+    ImageView s2pixel5;
+    ImageView s2pixel6;
+    ImageView s2pixel7;
+    ImageView s2pixel8;
+    ImageView s2pixel9;
+    ImageView s2pixel10;
+    ImageView s2pixel11;
+
+    ImageView s3pixel1;
+    ImageView s3pixel2;
+    ImageView s3pixel3;
+    ImageView s3pixel4;
+    ImageView s3pixel5;
+    ImageView s3pixel6;
+    ImageView s3pixel7;
+    ImageView s3pixel8;
+    ImageView s3pixel9;
+    ImageView s3pixel10;
+    ImageView s3pixel11;
 
     int pixelSelect;
     int tubeSelect;
@@ -60,6 +97,7 @@ public class MainActivity extends Activity {
     OutputStream btOutputStream;
     Set<BluetoothDevice> pairedDevices;
     ListView listViewBTDevices;
+    TextView statusText;
 
     // Well known SPP UUID
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -75,6 +113,42 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
+        s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
+        s1pixel2 = (ImageView) findViewById(R.id.s1pixel2);
+        s1pixel3 = (ImageView) findViewById(R.id.s1pixel3);
+        s1pixel4 = (ImageView) findViewById(R.id.s1pixel4);
+        s1pixel5 = (ImageView) findViewById(R.id.s1pixel5);
+        s1pixel6 = (ImageView) findViewById(R.id.s1pixel6);
+        s1pixel7 = (ImageView) findViewById(R.id.s1pixel7);
+        s1pixel8 = (ImageView) findViewById(R.id.s1pixel8);
+        s1pixel9 = (ImageView) findViewById(R.id.s1pixel9);
+        s1pixel10 = (ImageView) findViewById(R.id.s1pixel10);
+        s1pixel11 = (ImageView) findViewById(R.id.s1pixel11);
+
+        s2pixel1 = (ImageView) findViewById(R.id.s2pixel1);
+        s2pixel2 = (ImageView) findViewById(R.id.s2pixel2);
+        s2pixel3 = (ImageView) findViewById(R.id.s2pixel3);
+        s2pixel4 = (ImageView) findViewById(R.id.s2pixel4);
+        s2pixel5 = (ImageView) findViewById(R.id.s2pixel5);
+        s2pixel6 = (ImageView) findViewById(R.id.s2pixel6);
+        s2pixel7 = (ImageView) findViewById(R.id.s2pixel7);
+        s2pixel8 = (ImageView) findViewById(R.id.s2pixel8);
+        s2pixel9 = (ImageView) findViewById(R.id.s2pixel9);
+        s2pixel10 = (ImageView) findViewById(R.id.s2pixel10);
+        s2pixel11 = (ImageView) findViewById(R.id.s2pixel11);
+
+        s3pixel1 = (ImageView) findViewById(R.id.s3pixel1);
+        s3pixel2 = (ImageView) findViewById(R.id.s3pixel2);
+        s3pixel3 = (ImageView) findViewById(R.id.s3pixel3);
+        s3pixel4 = (ImageView) findViewById(R.id.s3pixel4);
+        s3pixel5 = (ImageView) findViewById(R.id.s3pixel5);
+        s3pixel6 = (ImageView) findViewById(R.id.s3pixel6);
+        s3pixel7 = (ImageView) findViewById(R.id.s3pixel7);
+        s3pixel8 = (ImageView) findViewById(R.id.s3pixel8);
+        s3pixel9 = (ImageView) findViewById(R.id.s3pixel9);
+        s3pixel10 = (ImageView) findViewById(R.id.s3pixel10);
+        s3pixel11 = (ImageView) findViewById(R.id.s3pixel11);
+
         // zero out array
         for(int i = 0; i < STRIP_SIZE; i++) {
             for(int j = 0; j < LEDS_PER_PIXEL; j++) {
@@ -83,7 +157,7 @@ public class MainActivity extends Activity {
         }
 
         myBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        TextView statusText = (TextView) findViewById(R.id.textDeviceID);
+        statusText = (TextView) findViewById(R.id.textDeviceID);
         if (myBluetoothAdapter == null) {
             statusText.setText("Bluetooth not supported on this phone");
         }
@@ -186,7 +260,7 @@ public class MainActivity extends Activity {
         listViewBTDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,long arg3) {
+            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
                 // TODO Auto-generated method stub
 
                 myBluetoothAdapter.cancelDiscovery();
@@ -203,6 +277,7 @@ public class MainActivity extends Activity {
                     socket.connect();
                     if(socket.isConnected()) {
                         Toast.makeText(getApplicationContext(),"Connection Successful",Toast.LENGTH_SHORT).show();
+                        statusText.setText("Connected");
                     }
                     else {
                         Toast.makeText(getApplicationContext(), "Connection Unsuccessful", Toast.LENGTH_SHORT).show();
@@ -232,66 +307,68 @@ public class MainActivity extends Activity {
 
     //Send pixel array to Atmu
     public void sendToAtmu() {
-        if(socket!=null) {
+
+        if (socket!=null) {
             // ghetto Attempt at making array of array of array
-            try {
-                btOutputStream = socket.getOutputStream();
-                for (int cur_tube = 0; cur_tube < TUBE_QTY; cur_tube++) {
-                    for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
-                        for (int cur_LED = 0; cur_LED < LEDS_PER_PIXEL; cur_LED++) {
-                            btOutputStream.write(strips[cur_tube][cur_pixel][cur_LED]);
-                        }
-                        try {
-                            Thread.sleep(5);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-//         if that mess above doesn't work uncomment this
 //            try {
 //                btOutputStream = socket.getOutputStream();
-//
-//                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
-//                    btOutputStream.write(s1[cur_pixel][0]);
-//                    btOutputStream.write(s1[cur_pixel][1]);
-//                    btOutputStream.write(s1[cur_pixel][2]);
-//                    try {
-//                        Thread.sleep(5);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//
-//                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
-//                    btOutputStream.write(s2[cur_pixel][0]);
-//                    btOutputStream.write(s2[cur_pixel][1]);
-//                    btOutputStream.write(s2[cur_pixel][2]);
-//                    try {
-//                        Thread.sleep(5);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//
-//                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
-//                    btOutputStream.write(s3[cur_pixel][0]);
-//                    btOutputStream.write(s3[cur_pixel][1]);
-//                    btOutputStream.write(s3[cur_pixel][2]);
-//                    try {
-//                        Thread.sleep(5);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
+//                for (int cur_tube = 0; cur_tube < TUBE_QTY; cur_tube++) {
+//                    for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+//                        for (int cur_LED = 0; cur_LED < LEDS_PER_PIXEL; cur_LED++) {
+//                            btOutputStream.write(strips[cur_tube][cur_pixel][cur_LED]);
+//                            try {
+//                                Thread.sleep(5);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
 //                    }
 //                }
 //            }
 //            catch (IOException e) {
 //                e.printStackTrace();
 //            }
+//         if that mess above doesn't work uncomment this
+
+            try {
+                btOutputStream = socket.getOutputStream();
+
+                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+                    btOutputStream.write(s1[cur_pixel][0]);
+                    btOutputStream.write(s1[cur_pixel][1]);
+                    btOutputStream.write(s1[cur_pixel][2]);
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+                    btOutputStream.write(s2[cur_pixel][0]);
+                    btOutputStream.write(s2[cur_pixel][1]);
+                    btOutputStream.write(s2[cur_pixel][2]);
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
+                    btOutputStream.write(s3[cur_pixel][0]);
+                    btOutputStream.write(s3[cur_pixel][1]);
+                    btOutputStream.write(s3[cur_pixel][2]);
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         else {
             Toast.makeText(getApplicationContext(), "No Bluetooth Connection", Toast.LENGTH_SHORT).show();
@@ -451,6 +528,14 @@ public class MainActivity extends Activity {
         presetWindow = new PopupWindow(layout, 800, 600, true);
         presetWindow.showAtLocation(layout, Gravity.CENTER, 0, 0);
 
+        rProgress = gProgress = bProgress = 0;
+
+        for(int i = 0; i < STRIP_SIZE; i++) {
+            for(int j = 0; j < LEDS_PER_PIXEL; j++) {
+                s1[i][j] = 0; s2[i][j] = 0; s3[i][j] = 0;
+            }
+        }
+
         final ImageView tubeView = (ImageView) layout.findViewById(R.id.tubeView);
 
         Button btn_setTube1 = (Button) layout.findViewById(R.id.setTube1);
@@ -466,6 +551,10 @@ public class MainActivity extends Activity {
         final SeekBar seekR = (SeekBar) layout.findViewById(R.id.seekBarR);
         final SeekBar seekG = (SeekBar) layout.findViewById(R.id.seekBarG);
         final SeekBar seekB = (SeekBar) layout.findViewById(R.id.seekBarB);
+
+        textRValue.setText("R: " + rProgress);
+        textGValue.setText("G: " + gProgress);
+        textBValue.setText("B: " + bProgress);
 
         seekR.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
@@ -559,20 +648,21 @@ public class MainActivity extends Activity {
 
     public void setTube(int tube, int rValue, int gValue, int bValue) {
         tubeSelect = tube;
+
+        final TextView s1p1value = (TextView) findViewById(R.id.s1p1Values);
+        final TextView s1p2value = (TextView) findViewById(R.id.s1p2Values);
+        final TextView s1p3value = (TextView) findViewById(R.id.s1p3Values);
+        final TextView s1p4value = (TextView) findViewById(R.id.s1p4Values);
+        final TextView s1p5value = (TextView) findViewById(R.id.s1p5Values);
+        final TextView s1p6value = (TextView) findViewById(R.id.s1p6Values);
+        final TextView s1p7value = (TextView) findViewById(R.id.s1p7Values);
+        final TextView s1p8value = (TextView) findViewById(R.id.s1p8Values);
+        final TextView s1p9value = (TextView) findViewById(R.id.s1p9Values);
+        final TextView s1p10value = (TextView) findViewById(R.id.s1p10Values);
+        final TextView s1p11value = (TextView) findViewById(R.id.s1p11Values);
+
         switch(tubeSelect){
             case 1:
-                final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
-                final ImageView s1pixel2 = (ImageView) findViewById(R.id.s1pixel2);
-                final ImageView s1pixel3 = (ImageView) findViewById(R.id.s1pixel3);
-                final ImageView s1pixel4 = (ImageView) findViewById(R.id.s1pixel4);
-                final ImageView s1pixel5 = (ImageView) findViewById(R.id.s1pixel5);
-                final ImageView s1pixel6 = (ImageView) findViewById(R.id.s1pixel6);
-                final ImageView s1pixel7 = (ImageView) findViewById(R.id.s1pixel7);
-                final ImageView s1pixel8 = (ImageView) findViewById(R.id.s1pixel8);
-                final ImageView s1pixel9 = (ImageView) findViewById(R.id.s1pixel9);
-                final ImageView s1pixel10 = (ImageView) findViewById(R.id.s1pixel10);
-                final ImageView s1pixel11 = (ImageView) findViewById(R.id.s1pixel11);
-
                 final ImageView strip1[] = {s1pixel1, s1pixel2, s1pixel3, s1pixel4,
                         s1pixel5, s1pixel6, s1pixel7, s1pixel8, s1pixel9, s1pixel10, s1pixel11 };
 
@@ -583,20 +673,20 @@ public class MainActivity extends Activity {
                     s1[i][2] = (char) (bValue);
                 }
 
+                s1p1value.setText("R: " + (int) s1[0][0] + " G: " + (int) s1[0][1] + " B: " + (int) s1[0][2]);
+                s1p2value.setText("R: " + (int) s1[1][0] + " G: " + (int) s1[1][1] + " B: " + (int) s1[1][2]);
+                s1p3value.setText("R: " + (int) s1[2][0] + " G: " + (int) s1[2][1] + " B: " + (int) s1[2][2]);
+                s1p4value.setText("R: " + (int) s1[3][0] + " G: " + (int) s1[3][1] + " B: " + (int) s1[3][2]);
+                s1p5value.setText("R: " + (int) s1[4][0] + " G: " + (int) s1[4][1] + " B: " + (int) s1[4][2]);
+                s1p6value.setText("R: " + (int) s1[5][0] + " G: " + (int) s1[5][1] + " B: " + (int) s1[5][2]);
+                s1p7value.setText("R: " + (int) s1[6][0] + " G: " + (int) s1[6][1] + " B: " + (int) s1[6][2]);
+                s1p8value.setText("R: " + (int) s1[7][0] + " G: " + (int) s1[7][1] + " B: " + (int) s1[7][2]);
+                s1p9value.setText("R: " + (int) s1[8][0] + " G: " + (int) s1[8][1] + " B: " + (int) s1[8][2]);
+                s1p10value.setText("R: " + (int) s1[9][0] + " G: " + (int) s1[9][1] + " B: " + (int) s1[9][2]);
+                s1p11value.setText("R: " + (int) s1[10][0] + " G: " + (int) s1[10][1] + " B: " + (int) s1[10][2]);
+
                 break;
             case 2:
-                final ImageView s2pixel1 = (ImageView) findViewById(R.id.s2pixel1);
-                final ImageView s2pixel2 = (ImageView) findViewById(R.id.s2pixel2);
-                final ImageView s2pixel3 = (ImageView) findViewById(R.id.s2pixel3);
-                final ImageView s2pixel4 = (ImageView) findViewById(R.id.s2pixel4);
-                final ImageView s2pixel5 = (ImageView) findViewById(R.id.s2pixel5);
-                final ImageView s2pixel6 = (ImageView) findViewById(R.id.s2pixel6);
-                final ImageView s2pixel7 = (ImageView) findViewById(R.id.s2pixel7);
-                final ImageView s2pixel8 = (ImageView) findViewById(R.id.s2pixel8);
-                final ImageView s2pixel9 = (ImageView) findViewById(R.id.s2pixel9);
-                final ImageView s2pixel10 = (ImageView) findViewById(R.id.s2pixel10);
-                final ImageView s2pixel11 = (ImageView) findViewById(R.id.s2pixel11);
-
                 final ImageView strip2[] = {s2pixel1, s2pixel2, s2pixel3, s2pixel4,
                         s2pixel5, s2pixel6, s2pixel7, s2pixel8, s2pixel9, s2pixel10, s2pixel11 };
 
@@ -609,18 +699,6 @@ public class MainActivity extends Activity {
 
                 break;
             case 3:
-                final ImageView s3pixel1 = (ImageView) findViewById(R.id.s3pixel1);
-                final ImageView s3pixel2 = (ImageView) findViewById(R.id.s3pixel2);
-                final ImageView s3pixel3 = (ImageView) findViewById(R.id.s3pixel3);
-                final ImageView s3pixel4 = (ImageView) findViewById(R.id.s3pixel4);
-                final ImageView s3pixel5 = (ImageView) findViewById(R.id.s3pixel5);
-                final ImageView s3pixel6 = (ImageView) findViewById(R.id.s3pixel6);
-                final ImageView s3pixel7 = (ImageView) findViewById(R.id.s3pixel7);
-                final ImageView s3pixel8 = (ImageView) findViewById(R.id.s3pixel8);
-                final ImageView s3pixel9 = (ImageView) findViewById(R.id.s3pixel9);
-                final ImageView s3pixel10 = (ImageView) findViewById(R.id.s3pixel10);
-                final ImageView s3pixel11 = (ImageView) findViewById(R.id.s3pixel11);
-
                 final ImageView strip3[] = {s3pixel1, s3pixel2, s3pixel3, s3pixel4,
                     s3pixel5, s3pixel6, s3pixel7, s3pixel8, s3pixel9, s3pixel10, s3pixel11};
 
@@ -640,44 +718,6 @@ public class MainActivity extends Activity {
     }
 
     public void setPreset1() {
-
-        // declare all the imageviews
-        final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
-        final ImageView s1pixel2 = (ImageView) findViewById(R.id.s1pixel2);
-        final ImageView s1pixel3 = (ImageView) findViewById(R.id.s1pixel3);
-        final ImageView s1pixel4 = (ImageView) findViewById(R.id.s1pixel4);
-        final ImageView s1pixel5 = (ImageView) findViewById(R.id.s1pixel5);
-        final ImageView s1pixel6 = (ImageView) findViewById(R.id.s1pixel6);
-        final ImageView s1pixel7 = (ImageView) findViewById(R.id.s1pixel7);
-        final ImageView s1pixel8 = (ImageView) findViewById(R.id.s1pixel8);
-        final ImageView s1pixel9 = (ImageView) findViewById(R.id.s1pixel9);
-        final ImageView s1pixel10 = (ImageView) findViewById(R.id.s1pixel10);
-        final ImageView s1pixel11 = (ImageView) findViewById(R.id.s1pixel11);
-
-        final ImageView s2pixel1 = (ImageView) findViewById(R.id.s2pixel1);
-        final ImageView s2pixel2 = (ImageView) findViewById(R.id.s2pixel2);
-        final ImageView s2pixel3 = (ImageView) findViewById(R.id.s2pixel3);
-        final ImageView s2pixel4 = (ImageView) findViewById(R.id.s2pixel4);
-        final ImageView s2pixel5 = (ImageView) findViewById(R.id.s2pixel5);
-        final ImageView s2pixel6 = (ImageView) findViewById(R.id.s2pixel6);
-        final ImageView s2pixel7 = (ImageView) findViewById(R.id.s2pixel7);
-        final ImageView s2pixel8 = (ImageView) findViewById(R.id.s2pixel8);
-        final ImageView s2pixel9 = (ImageView) findViewById(R.id.s2pixel9);
-        final ImageView s2pixel10 = (ImageView) findViewById(R.id.s2pixel10);
-        final ImageView s2pixel11 = (ImageView) findViewById(R.id.s2pixel11);
-
-        final ImageView s3pixel1 = (ImageView) findViewById(R.id.s3pixel1);
-        final ImageView s3pixel2 = (ImageView) findViewById(R.id.s3pixel2);
-        final ImageView s3pixel3 = (ImageView) findViewById(R.id.s3pixel3);
-        final ImageView s3pixel4 = (ImageView) findViewById(R.id.s3pixel4);
-        final ImageView s3pixel5 = (ImageView) findViewById(R.id.s3pixel5);
-        final ImageView s3pixel6 = (ImageView) findViewById(R.id.s3pixel6);
-        final ImageView s3pixel7 = (ImageView) findViewById(R.id.s3pixel7);
-        final ImageView s3pixel8 = (ImageView) findViewById(R.id.s3pixel8);
-        final ImageView s3pixel9 = (ImageView) findViewById(R.id.s3pixel9);
-        final ImageView s3pixel10 = (ImageView) findViewById(R.id.s3pixel10);
-        final ImageView s3pixel11 = (ImageView) findViewById(R.id.s3pixel11);
-
         final ImageView strip1[] = {s1pixel1, s1pixel2, s1pixel3, s1pixel4,
                 s1pixel5, s1pixel6, s1pixel7, s1pixel8, s1pixel9, s1pixel10, s1pixel11 };
 
@@ -707,44 +747,6 @@ public class MainActivity extends Activity {
     }
 
     public void setPreset2() {
-
-        // declare all the imageviews
-        final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
-        final ImageView s1pixel2 = (ImageView) findViewById(R.id.s1pixel2);
-        final ImageView s1pixel3 = (ImageView) findViewById(R.id.s1pixel3);
-        final ImageView s1pixel4 = (ImageView) findViewById(R.id.s1pixel4);
-        final ImageView s1pixel5 = (ImageView) findViewById(R.id.s1pixel5);
-        final ImageView s1pixel6 = (ImageView) findViewById(R.id.s1pixel6);
-        final ImageView s1pixel7 = (ImageView) findViewById(R.id.s1pixel7);
-        final ImageView s1pixel8 = (ImageView) findViewById(R.id.s1pixel8);
-        final ImageView s1pixel9 = (ImageView) findViewById(R.id.s1pixel9);
-        final ImageView s1pixel10 = (ImageView) findViewById(R.id.s1pixel10);
-        final ImageView s1pixel11 = (ImageView) findViewById(R.id.s1pixel11);
-
-        final ImageView s2pixel1 = (ImageView) findViewById(R.id.s2pixel1);
-        final ImageView s2pixel2 = (ImageView) findViewById(R.id.s2pixel2);
-        final ImageView s2pixel3 = (ImageView) findViewById(R.id.s2pixel3);
-        final ImageView s2pixel4 = (ImageView) findViewById(R.id.s2pixel4);
-        final ImageView s2pixel5 = (ImageView) findViewById(R.id.s2pixel5);
-        final ImageView s2pixel6 = (ImageView) findViewById(R.id.s2pixel6);
-        final ImageView s2pixel7 = (ImageView) findViewById(R.id.s2pixel7);
-        final ImageView s2pixel8 = (ImageView) findViewById(R.id.s2pixel8);
-        final ImageView s2pixel9 = (ImageView) findViewById(R.id.s2pixel9);
-        final ImageView s2pixel10 = (ImageView) findViewById(R.id.s2pixel10);
-        final ImageView s2pixel11 = (ImageView) findViewById(R.id.s2pixel11);
-
-        final ImageView s3pixel1 = (ImageView) findViewById(R.id.s3pixel1);
-        final ImageView s3pixel2 = (ImageView) findViewById(R.id.s3pixel2);
-        final ImageView s3pixel3 = (ImageView) findViewById(R.id.s3pixel3);
-        final ImageView s3pixel4 = (ImageView) findViewById(R.id.s3pixel4);
-        final ImageView s3pixel5 = (ImageView) findViewById(R.id.s3pixel5);
-        final ImageView s3pixel6 = (ImageView) findViewById(R.id.s3pixel6);
-        final ImageView s3pixel7 = (ImageView) findViewById(R.id.s3pixel7);
-        final ImageView s3pixel8 = (ImageView) findViewById(R.id.s3pixel8);
-        final ImageView s3pixel9 = (ImageView) findViewById(R.id.s3pixel9);
-        final ImageView s3pixel10 = (ImageView) findViewById(R.id.s3pixel10);
-        final ImageView s3pixel11 = (ImageView) findViewById(R.id.s3pixel11);
-
         final ImageView strip1[] = {s1pixel1, s1pixel2, s1pixel3, s1pixel4,
                 s1pixel5, s1pixel6, s1pixel7, s1pixel8, s1pixel9, s1pixel10, s1pixel11 };
 
@@ -756,23 +758,23 @@ public class MainActivity extends Activity {
 
         for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
             strip1[cur_pixel].setBackgroundColor(Color.rgb(255, 0, 0));
-            strips[0][cur_pixel][0] = (char) (255);
-            strips[0][cur_pixel][1] = (char) (0);
-            strips[0][cur_pixel][2] = (char) (0);
+            s1[cur_pixel][0] = (char) (255);
+            s1[cur_pixel][1] = (char) (0);
+            s1[cur_pixel][2] = (char) (0);
         }
 
         for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
             strip2[cur_pixel].setBackgroundColor(Color.rgb(0, 255, 0));
-            strips[1][cur_pixel][0] = (char) (0);
-            strips[1][cur_pixel][1] = (char) (255);
-            strips[1][cur_pixel][2] = (char) (0);
+            s2[cur_pixel][0] = (char) (0);
+            s2[cur_pixel][1] = (char) (255);
+            s2[cur_pixel][2] = (char) (0);
         }
 
         for (int cur_pixel = 0; cur_pixel < STRIP_SIZE; cur_pixel++) {
             strip3[cur_pixel].setBackgroundColor(Color.rgb(0, 0, 255));
-            strips[2][cur_pixel][0] = (char) (0);
-            strips[2][cur_pixel][1] = (char) (0);
-            strips[2][cur_pixel][2] = (char) (255);
+            s3[cur_pixel][0] = (char) (0);
+            s3[cur_pixel][1] = (char) (0);
+            s3[cur_pixel][2] = (char) (255);
         }
 
 //        for(int i = 0; i < 6; i++) {
@@ -821,43 +823,6 @@ public class MainActivity extends Activity {
     }
 
     public void setPreset3() {
-        // declare all the imageviews
-        final ImageView s1pixel1 = (ImageView) findViewById(R.id.s1pixel1);
-        final ImageView s1pixel2 = (ImageView) findViewById(R.id.s1pixel2);
-        final ImageView s1pixel3 = (ImageView) findViewById(R.id.s1pixel3);
-        final ImageView s1pixel4 = (ImageView) findViewById(R.id.s1pixel4);
-        final ImageView s1pixel5 = (ImageView) findViewById(R.id.s1pixel5);
-        final ImageView s1pixel6 = (ImageView) findViewById(R.id.s1pixel6);
-        final ImageView s1pixel7 = (ImageView) findViewById(R.id.s1pixel7);
-        final ImageView s1pixel8 = (ImageView) findViewById(R.id.s1pixel8);
-        final ImageView s1pixel9 = (ImageView) findViewById(R.id.s1pixel9);
-        final ImageView s1pixel10 = (ImageView) findViewById(R.id.s1pixel10);
-        final ImageView s1pixel11 = (ImageView) findViewById(R.id.s1pixel11);
-
-        final ImageView s2pixel1 = (ImageView) findViewById(R.id.s2pixel1);
-        final ImageView s2pixel2 = (ImageView) findViewById(R.id.s2pixel2);
-        final ImageView s2pixel3 = (ImageView) findViewById(R.id.s2pixel3);
-        final ImageView s2pixel4 = (ImageView) findViewById(R.id.s2pixel4);
-        final ImageView s2pixel5 = (ImageView) findViewById(R.id.s2pixel5);
-        final ImageView s2pixel6 = (ImageView) findViewById(R.id.s2pixel6);
-        final ImageView s2pixel7 = (ImageView) findViewById(R.id.s2pixel7);
-        final ImageView s2pixel8 = (ImageView) findViewById(R.id.s2pixel8);
-        final ImageView s2pixel9 = (ImageView) findViewById(R.id.s2pixel9);
-        final ImageView s2pixel10 = (ImageView) findViewById(R.id.s2pixel10);
-        final ImageView s2pixel11 = (ImageView) findViewById(R.id.s2pixel11);
-
-        final ImageView s3pixel1 = (ImageView) findViewById(R.id.s3pixel1);
-        final ImageView s3pixel2 = (ImageView) findViewById(R.id.s3pixel2);
-        final ImageView s3pixel3 = (ImageView) findViewById(R.id.s3pixel3);
-        final ImageView s3pixel4 = (ImageView) findViewById(R.id.s3pixel4);
-        final ImageView s3pixel5 = (ImageView) findViewById(R.id.s3pixel5);
-        final ImageView s3pixel6 = (ImageView) findViewById(R.id.s3pixel6);
-        final ImageView s3pixel7 = (ImageView) findViewById(R.id.s3pixel7);
-        final ImageView s3pixel8 = (ImageView) findViewById(R.id.s3pixel8);
-        final ImageView s3pixel9 = (ImageView) findViewById(R.id.s3pixel9);
-        final ImageView s3pixel10 = (ImageView) findViewById(R.id.s3pixel10);
-        final ImageView s3pixel11 = (ImageView) findViewById(R.id.s3pixel11);
-
         final ImageView strip1[] = {s1pixel1, s1pixel2, s1pixel3, s1pixel4,
                 s1pixel5, s1pixel6, s1pixel7, s1pixel8, s1pixel9, s1pixel10, s1pixel11 };
 
